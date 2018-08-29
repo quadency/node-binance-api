@@ -1745,7 +1745,7 @@ let api = function Binance() {
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
                         async.mapLimit(symbols, 10, getSymbolDepthSnapshot, (err, results) => {
                             if (err) {
-                              console.log('Error----fuckin shit:', err);
+                              console.log('Error----QUAD-agent-socket-update fuckin shit:', err);
                               throw err;
                             }
                             results.forEach(updateSymbolDepthCache);
