@@ -91,6 +91,8 @@ let api = function Binance() {
 
         if (Binance.options.verbose) Binance.options.log('using socks proxy server ' + socksproxy);
 
+        opt.agent= false;
+        opt.pool= { maxSockets: 400 };
         opt.agentClass = SocksProxyAgent;
         opt.agentOptions = {
             protocol: parseProxy(socksproxy)[0],
