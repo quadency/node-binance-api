@@ -1758,7 +1758,6 @@ let api = function Binance() {
                             }
                             results.forEach(updateSymbolDepthCache);
                         });
-                        reconnect();
                     });
                     symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
