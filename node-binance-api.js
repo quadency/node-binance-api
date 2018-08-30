@@ -17,6 +17,7 @@ let api = function Binance() {
 
     const WebSocket = require('ws');
     const request = require('request');
+    const axios = require('axios');
     const crypto = require('crypto');
     const file = require('fs');
     const url = require('url');
@@ -1652,15 +1653,13 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
-                let depthReconnect = 20000
                 let reconnect = function () {
                     if (Binance.options.reconnect) {
                       console.log('Reconnecting called', Date.now());
                       setTimeout(() => {
                         console.log('calling depth cache function now', Date.now());
                         depthCacheFunction(symbols, callback, limit)
-                        depthReconnect *= 2;
-                      }, depthReconnect);
+                      }, 20000);
                     }
                 };
 
@@ -1698,14 +1697,21 @@ let api = function Binance() {
                 };
 
                 let getSymbolDepthSnapshot = function (symbol, cb) {
+                    const options = {
+                      method: 'GET',
+                      url: `${base}v1/depth`,
+                      params: {
+                        symbol,
+                        limit
+                      }
+                    };
 
-                    publicRequest(base + 'v1/depth', { symbol: symbol, limit: limit }, function (error, json) {
-                        if (error) {
-                            return cb(error, null);
-                        }
-                        // Store symbol next use
-                        json.symb = symbol;
-                        cb(null, json)
+                    axios(options).then(response => {
+                      const json = response.data;
+                      json.symb = symbol;
+                      cb(null, json);
+                    }).catch(error => {
+                      cb(error, null);
                     });
                 };
 
@@ -1745,20 +1751,14 @@ let api = function Binance() {
                         return symbol.toLowerCase() + '@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
-                        let didErrorOccur = false;
                         async.mapLimit(symbols, 10, getSymbolDepthSnapshot, (err, results) => {
                             if (err) {
                               console.log('Error occurred, reconnecting biiiitch:', err);
-                              didErrorOccur = true;
-                              // throw err;
+                              throw err;
                             }
-                            if (!didErrorOccur){
-                              results.forEach(updateSymbolDepthCache);
-                            }
+                            results.forEach(updateSymbolDepthCache);
                         });
-                        if (didErrorOccur){
-                          reconnect();
-                        }
+                        reconnect();
                     });
                     symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
