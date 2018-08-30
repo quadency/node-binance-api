@@ -1652,13 +1652,15 @@ let api = function Binance() {
             * @return {string} the websocket endpoint
             */
             depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
+                let depthReconnect = 20000
                 let reconnect = function () {
                     if (Binance.options.reconnect) {
                       console.log('Reconnecting called', Date.now());
                       setTimeout(() => {
                         console.log('calling depth cache function now', Date.now());
                         depthCacheFunction(symbols, callback, limit)
-                      }, 20000);
+                        depthReconnect *= 2;
+                      }, depthReconnect);
                     }
                 };
 
@@ -1743,13 +1745,20 @@ let api = function Binance() {
                         return symbol.toLowerCase() + '@depth';
                     });
                     subscription = subscribeCombined(streams, handleDepthStreamData, reconnect, function () {
+                        let didErrorOccur = false;
                         async.mapLimit(symbols, 10, getSymbolDepthSnapshot, (err, results) => {
                             if (err) {
-                              console.log('Error----QUAD-agent-socket-update fuckin shit:', err);
-                              throw err;
+                              console.log('Error occurred, reconnecting biiiitch:', err);
+                              didErrorOccur = true;
+                              // throw err;
                             }
-                            results.forEach(updateSymbolDepthCache);
+                            if (!didErrorOccur){
+                              results.forEach(updateSymbolDepthCache);
+                            }
                         });
+                        if (didErrorOccur){
+                          reconnect();
+                        }
                     });
                     symbols.forEach(s => assignEndpointIdToContext(s, subscription.endpoint));
                 } else {
