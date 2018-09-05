@@ -1654,7 +1654,7 @@ let api = function Binance() {
             * @param {int} limit - the number of entries
             * @return {string} the websocket endpoint
             */
-            depthCache: function depthCacheFunction(symbols, callback, limit = 500) {
+            depthCache: function depthCacheFunction(symbols, callback, limit = 500, snapshotCallback, deltaCallback) {
                 let reconnect = function () {
                     if (Binance.options.reconnect) {
                       console.log('Calling depth cache function now', Date.now());
@@ -1692,6 +1692,7 @@ let api = function Binance() {
                             return terminate(context.endpointId, true);
                         }
                         if (callback) callback(symbol, Binance.depthCache[symbol], context);
+                        if (deltaCallback) deltaCallback(depth);
                     }
                 };
 
@@ -1736,6 +1737,7 @@ let api = function Binance() {
                     }
                     delete context.messageQueue;
                     if (callback) callback(symbol, Binance.depthCache[symbol]);
+                    if (snapshotCallback) snapshotCallback(Binance.depthCache);
                 };
 
                 /* If an array of symbols are sent we use a combined stream connection rather.
