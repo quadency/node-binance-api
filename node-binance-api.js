@@ -41,7 +41,7 @@ let api = function Binance() {
         recvWindow: 5000,
         useServerTime: false,
         reconnect: true,
-        verbose: false,
+        verbose: true,
         test: false,
         log: function (...args) {
             console.log(Array.prototype.slice.call(args));
