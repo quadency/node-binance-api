@@ -1628,6 +1628,7 @@ let api = function Binance() {
             */
             depth: function depth(symbols, callback) {
                 let reconnect = function () {
+                    console.log('reconnecting depth nowwwwww');
                     if (Binance.options.reconnect) depth(symbols, callback);
                 };
 
